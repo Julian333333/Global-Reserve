@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Price Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: royalblue;
+            color: white;
+            padding: 1em 0;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 2em 0;
+        }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2em 0;
+        }
+        .price-table th, .price-table td {
+            border: 1px solid #ddd;
+            padding: 1em;
+            text-align: left;
+        }
+        .price-table th {
+            background-color: royalblue;
+            color: white;
+        }
+        .price-table td {
+            background-color: #f9f9f9;
+        }
+        .price-table .price {
+            color: gold;
+        }
+        footer {
+            background-color: royalblue;
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Resource Price Tracking</h1>
+    </header>
+    <div class="container">
+        <h2>Latest Prices</h2>
+        <table class="price-table">
+            <thead>
+                <tr>
+                    <th>Commodity</th>
+                    <th>Price</th>
+                    <th>Last Update</th>
+                </tr>
+            </thead>
+            <tbody id="price-data">
+                <!-- Data will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        <p>&copy; 2023 Resource Price Tracking</p>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var commodities = ['gold', 'silver', 'platinum'];
+        var apiKey = 'YOUR_API_KEY';
+
+        function fetchPrices() {
+            commodities.forEach(function(name) {
+                $.ajax({
+                    method: 'GET',
+                    url: 'https://api.api-ninjas.com/v1/commodityprice?name=' + name,
+                    headers: { 'X-Api-Key': apiKey },
+                    contentType: 'application/json',
+                    success: function(result) {
+                        var row = '<tr>' +
+                            '<td>' + name.charAt(0).toUpperCase() + name.slice(1) + '</td>' +
+                            '<td class="price">' + result.price + '</td>' +
+                            '<td>' + new Date(result.timestamp).toLocaleString() + '</td>' +
+                            '</tr>';
+                        $('#price-data').append(row);
+                    },
+                    error: function ajaxError(jqXHR) {
+                        console.error('Error: ', jqXHR.responseText);
+                    }
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            fetchPrices();
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Price Tracking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: royalblue;
+            color: white;
+            padding: 1em 0;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 2em 0;
+        }
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2em 0;
+        }
+        .price-table th, .price-table td {
+            border: 1px solid #ddd;
+            padding: 1em;
+            text-align: left;
+        }
+        .price-table th {
+            background-color: royalblue;
+            color: white;
+        }
+        .price-table td {
+            background-color: #f9f9f9;
+        }
+        .price-table .price {
+            color: gold;
+        }
+        footer {
+            background-color: royalblue;
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <footer>
+        <p>&copy; 2023 Resource Price Tracking</p>
+    </footer>
+    <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone/babel.min.js"></script>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [prices, setPrices] = useState([]);
+            const commodities = ['gold', 'silver', 'platinum'];
+            const apiKey = 'YOUR_API_KEY';
+
+            useEffect(() => {
+                fetchPrices();
+            }, []);
+
+            const fetchPrices = () => {
+                commodities.forEach(name => {
+                    fetch(`https://api.api-ninjas.com/v1/commodityprice?name=${name}`, {
+                        method: 'GET',
+                        headers: { 'X-Api-Key': apiKey },
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        setPrices(prevPrices => [...prevPrices, {
+                            name: name.charAt(0).toUpperCase() + name.slice(1),
+                            price: result.price,
+                            timestamp: new Date(result.timestamp).toLocaleString()
+                        }]);
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            };
+
+            return (
+                <div>
+                    <header>
+                        <h1>Resource Price Tracking</h1>
+                    </header>
+                    <div className="container">
+                        <h2>Latest Prices</h2>
+                        <table className="price-table">
+                            <thead>
+                                <tr>
+                                    <th>Commodity</th>
+                                    <th>Price</th>
+                                    <th>Last Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {prices.map((price, index) => (
+                                    <tr key={index}>
+                                        <td>{price.name}</td>
+                                        <td className="price">{price.price}</td>
+                                        <td>{price.timestamp}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
