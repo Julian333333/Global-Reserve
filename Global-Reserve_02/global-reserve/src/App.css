@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+body {
+  margin: 0;
+}
+/* index.css oder App.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}

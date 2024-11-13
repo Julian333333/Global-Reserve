@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import PriceChart from './components/PriceChart';
+import PriceList from './components/PriceList.js';
+import TransactionsTable from './components/TransactionsTable';
+import styled from 'styled-components';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => (
+  <Container>
+    <Sidebar />
+    <MainContent>
+      <Header />
+      <Section>
+        <PriceChart />
+        <PriceList />
+      </Section>
+      <TransactionsTable />
+    </MainContent>
+  </Container>
+);
 
 export default App;
+
+const Container = styled.div`
+  display: flex;
+  height: 100vh;
+  background-color: #0d1326;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  padding: 20px;
+  background-color: #12172b;
+  color: #ffffff;
+`;
+
+const Section = styled.div`
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+`;
