@@ -1,42 +1,24 @@
 import React from 'react';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import PriceChart from './components/PriceChart';
-import PriceList from './components/PriceList.js';
+import PriceList from './components/PriceList';
 import TransactionsTable from './components/TransactionsTable';
-import styled from 'styled-components';
+import './App.css';
 
-const App = () => (
-  <Container>
-    <Sidebar />
-    <MainContent>
-      <Header />
-      <Section>
-        <PriceChart />
+const App = () => {
+  return (
+    <div className="app">
+      <Sidebar />
+      <div className="content">
+        <div className="chart">
+          {/* Placeholder for the chart */}
+          <h2>Gold Price</h2>
+          <div style={{ backgroundColor: '#1e293b', height: '300px', borderRadius: '8px' }}></div>
+        </div>
         <PriceList />
-      </Section>
-      <TransactionsTable />
-    </MainContent>
-  </Container>
-);
+        <TransactionsTable />
+      </div>
+    </div>
+  );
+};
 
 export default App;
-
-const Container = styled.div`
-  display: flex;
-  height: 100vh;
-  background-color: #0d1326;
-`;
-
-const MainContent = styled.div`
-  flex: 1;
-  padding: 20px;
-  background-color: #12172b;
-  color: #ffffff;
-`;
-
-const Section = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-`;
