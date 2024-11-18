@@ -1,21 +1,20 @@
-/* Reset styles and ensure no margins, padding, or scrollbars */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* index.css oder App.css */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%; /* Full viewport height */
-  width: 100%;  /* Full viewport width */
-  background-color: #1a2238; /* Match your app's background color */
-  overflow: hidden; /* Disable scrollbars */
-}
-
-/* Ensure full screen layout for root element */
-#root {
-  height: 100%;
-  width: 100%;
 }
