@@ -42,4 +42,8 @@ const Section = styled.div`
   gap: 20px;
   margin-bottom: 20px;
 
+  // Füge diese Zeile hinzu, um die Kinder gleichmäßig zu verteilen
+  & > div {
+    flex: 1;
+  }
 `;
