@@ -1,24 +1,41 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import PriceChart from './components/PriceChart';
 import PriceList from './components/PriceList.js';
 import TransactionsTable from './components/TransactionsTable';
+import Login from './pages/Login'; // Adjust based on your actual file structure
 import styled from 'styled-components';
 import './App.css';
 
 const App = () => (
-  <Container>
-    <Sidebar />
-    <MainContent>
-      <Header />
-      <Section>
-        <PriceChart />
-        <PriceList />
-      </Section>
-      <TransactionsTable />
-    </MainContent>
-  </Container>
+  <BrowserRouter>
+    <Container>
+      <Sidebar />
+      <MainContent>
+        <Header />
+        <Routes>
+          {/* Define the routes for your app */}
+          <Route
+            path="/"
+            element={
+              <div>
+                {/* Main Dashboard */}
+                <Section>
+                  <PriceChart />
+                  <PriceList />
+                </Section>
+                <TransactionsTable />
+              </div>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          {/* Add more routes as needed */}
+        </Routes>
+      </MainContent>
+    </Container>
+  </BrowserRouter>
 );
 
 export default App;
@@ -42,7 +59,7 @@ const Section = styled.div`
   gap: 20px;
   margin-bottom: 20px;
 
-  // Füge diese Zeile hinzu, um die Kinder gleichmäßig zu verteilen
+  // Ensure child components are evenly distributed
   & > div {
     flex: 1;
   }
