@@ -1,4 +1,4 @@
-const apiKey = '5DUagI8vNs0xpDJKRIgIPA==41Xe7h6HvLXWr7mx'; // Replace 'YOUR_API_KEY' with your actual API key
+const apiKey = ''; // Replace 'YOUR_API_KEY' with your actual API key
 
 export async function fetchPrices() {
     const commodities = ['gold', 'platinum', 'lumber'];
