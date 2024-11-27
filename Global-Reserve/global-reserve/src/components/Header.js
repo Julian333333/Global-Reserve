@@ -4,7 +4,6 @@ import styled from 'styled-components';
 const Header = () => (
   <Container>
     <SearchBar placeholder="Search..." />
-    <UserProfile>Barfus</UserProfile>
   </Container>
 );
 

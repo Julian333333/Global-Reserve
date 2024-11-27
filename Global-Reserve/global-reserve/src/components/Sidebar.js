@@ -1,20 +1,29 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
-const Sidebar = () => (
-  <Container>
-    <Title>Global Reserve</Title>
-    <Menu>
-      <MenuItem>🏠 Dashboard</MenuItem>
-      <MenuItem>⏱️ Transactions</MenuItem>
-      <MenuItem>💳 Payments</MenuItem>
-      <MenuItem>👤 Profile</MenuItem>
-      <Divider />
-      <MenuItem>⚙️ Settings</MenuItem>
-      <MenuItem>🔒 Log Out</MenuItem>
-    </Menu>
-  </Container>
-);
+const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const handleLoginRedirect = () => {
+    navigate('/login');
+  };
+
+  return (
+    <Container>
+      <Title>Global Reserve</Title>
+      <Menu>
+        <MenuItem>🏠 Dashboard</MenuItem>
+        <MenuItem>⏱️ Transactions</MenuItem>
+        <MenuItem>💳 Payments</MenuItem>
+        <MenuItem>👤 Profile</MenuItem>
+        <Divider />
+        <MenuItem>⚙️ Settings</MenuItem>
+        <MenuItem onClick={handleLoginRedirect}>🔐 Log In</MenuItem>
+      </Menu>
+    </Container>
+  );
+};
 
 export default Sidebar;
 
