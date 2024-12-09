@@ -6,8 +6,11 @@ import PriceChart from './components/PriceChart';
 import PriceList from './components/PriceList.js';
 import TransactionsTable from './components/TransactionsTable';
 import Login from './pages/Login'; // Adjust based on your actual file structure
+import Profile from './pages/Profile'; // Importiere die Profilseite
 import styled from 'styled-components';
 import './App.css';
+
+const apiKey = '5DUagI8vNs0xpDJKRIgIPA==41Xe7h6HvLXWr7mx'; // Replace with your actual API key
 
 const App = () => (
   <BrowserRouter>
@@ -23,7 +26,7 @@ const App = () => (
               <div>
                 {/* Main Dashboard */}
                 <Section>
-                  <PriceChart />
+                  <PriceChart symbol="GOLD" apiKey={apiKey} />
                   <PriceList />
                 </Section>
                 <TransactionsTable />
@@ -31,6 +34,7 @@ const App = () => (
             }
           />
           <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} /> {/* Füge die Route für die Profilseite hinzu */}
           {/* Add more routes as needed */}
         </Routes>
       </MainContent>

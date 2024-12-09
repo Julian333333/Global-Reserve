@@ -25,8 +25,7 @@ const PriceList = () => {
     };
 
     getPrices();
-    const interval = setInterval(getPrices, 30000); // Refresh every 30 seconds
-
+    const interval = setInterval(getPrices, 10000); // Refresh every 30 seconds
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, []);
 
@@ -40,22 +39,21 @@ const PriceList = () => {
   };
 
   return (
-    <Container>
+    <PriceListBox>
       <Title>Prices</Title>
       <List>
         {renderPrices()}
       </List>
-    </Container>
+    </PriceListBox>
   );
 };
 
-const Container = styled.div`
-  padding: 20px;
-  background-color: #1a2238;
+const PriceListBox = styled.div`
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 0 auto;
 `;
 
 const Title = styled.h1`

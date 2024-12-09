@@ -9,14 +9,22 @@ const Sidebar = () => {
     navigate('/login');
   };
 
+  const handleProfileRedirect = () => {
+    navigate('/profile');
+  };
+
+  const handleDashboardRedirect = () => {
+    navigate('/');
+  };
+
   return (
     <Container>
       <Title>Global Reserve</Title>
       <Menu>
-        <MenuItem>🏠 Dashboard</MenuItem>
+        <MenuItem onClick={handleDashboardRedirect}>🏠 Dashboard</MenuItem> {/* Verknüpfe den Button mit der Startseite */}
         <MenuItem>⏱️ Transactions</MenuItem>
         <MenuItem>💳 Payments</MenuItem>
-        <MenuItem>👤 Profile</MenuItem>
+        <MenuItem onClick={handleProfileRedirect}>👤 Profile</MenuItem> {/* Verknüpfe den Button mit der Profilseite */}
         <Divider />
         <MenuItem>⚙️ Settings</MenuItem>
         <MenuItem onClick={handleLoginRedirect}>🔐 Log In</MenuItem>
