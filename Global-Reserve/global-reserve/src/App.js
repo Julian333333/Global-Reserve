@@ -7,6 +7,7 @@ import PriceList from './components/PriceList.js';
 import TransactionsTable from './components/TransactionsTable';
 import Login from './pages/Login'; // Adjust based on your actual file structure
 import Profile from './pages/Profile'; // Importiere die Profilseite
+import Register from './pages/Register.js';
 import styled from 'styled-components';
 import './App.css';
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} /> {/* Füge die Route für die Profilseite hinzu */}
           {/* Add more routes as needed */}
+          <Route path="/register" element={<Register />} />
         </Routes>
       </MainContent>
     </Container>
