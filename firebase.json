@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "Global-Reserve/global-reserve/build",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

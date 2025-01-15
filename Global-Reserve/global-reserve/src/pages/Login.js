@@ -33,7 +33,7 @@ const Login = () => {
                 } else {
                     console.log('No such document!');
                 }
-                navigate('/dashboard'); // Redirect to dashboard or any other page after login
+                navigate('/'); // Redirect to dashboard or any other page after login
             } else {
                 setError('User not authenticated');
             }
