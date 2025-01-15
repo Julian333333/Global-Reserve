@@ -17,13 +17,17 @@ const Sidebar = () => {
     navigate('/');
   };
 
+  const handleWalletRedirect = () => {
+    navigate('/wallet');
+  };
+
   return (
     <Container>
       <Title>Global Reserve</Title>
       <Menu>
         <MenuItem onClick={handleDashboardRedirect}>🏠 Dashboard</MenuItem> {/* Verknüpfe den Button mit der Startseite */}
         <MenuItem>⏱️ Transactions</MenuItem>
-        <MenuItem>💳 Payments</MenuItem>
+        <MenuItem onClick={handleWalletRedirect}>💳 Wallet</MenuItem> {/* Add Wallet menu item */}
         <MenuItem onClick={handleProfileRedirect}>👤 Profile</MenuItem> {/* Verknüpfe den Button mit der Profilseite */}
         <Divider />
         <MenuItem>⚙️ Settings</MenuItem>

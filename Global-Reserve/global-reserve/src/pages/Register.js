@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
+import CryptoJS from 'crypto-js';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -11,20 +12,34 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
 
+    const encrypt = (text) => {
+        return CryptoJS.AES.encrypt(text, 'encryptionKey').toString();
+    };
+
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+
+            // Generate a unique account number
+            const accountNumber = `ACC-${user.uid}-${Math.floor(Math.random() * 1000000)}`;
+
+            // Encrypt the account number
+            const encryptedAccountNumber = encrypt(accountNumber);
+
             await setDoc(doc(db, 'users', user.uid), {
                 email: user.email,
                 uid: user.uid,
                 username: username,
+                balance: 0,
+                accountNumber: encryptedAccountNumber
                 // Add any other user information you want to store
             });
             navigate('/'); // Redirect to dashboard or any other page after registration
         } catch (error) {
-            setError(error.message);
+            setError('Failed to register user');
+            console.error('Error registering user:', error);
         }
     };
 

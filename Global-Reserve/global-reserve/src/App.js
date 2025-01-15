@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import Wallet from './pages/Wallet'; // Importiere die Walletseite
 import PriceChart from './components/PriceChart';
 import PriceList from './components/PriceList.js';
 import TransactionsTable from './components/TransactionsTable';
@@ -38,6 +39,8 @@ const App = () => (
           <Route path="/profile" element={<Profile />} /> {/* Füge die Route für die Profilseite hinzu */}
           {/* Add more routes as needed */}
           <Route path="/register" element={<Register />} />
+          <Route path="/wallet" element={<Wallet />} /> {/* Add the Wallet route */}
+          {/* Add other routes as needed */}
         </Routes>
       </MainContent>
     </Container>
