@@ -1,11 +1,12 @@
-// src/pages/Profile.js
+// Updated Profile.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, storage } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { signOut, sendPasswordResetEmail } from 'firebase/auth'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import styled from 'styled-components';
+import placeholderImage from '../assets/placeholder.png'; // Add a placeholder image in your assets
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -66,84 +67,105 @@ const Profile = () => {
 
   return (
     <ProfileContainer>
-      <Title>Profil</Title>
-      <ProfileDetails>
-        <DetailItem>
-          <Label>Username:</Label>
-          <Value>{userData.username}</Value>
-        </DetailItem>
-        <DetailItem>
-          <Label>Email:</Label>
-          <Value>{userData.email}</Value>
-        </DetailItem>
-        {userData.profilePicture && (
-          <DetailItem>
-            <Label>Profile Picture:</Label>
-            <ProfileImage src={userData.profilePicture} alt="Profile" />
-          </DetailItem>
-        )}
-        <DetailItem>
-          <Label>Upload Profile Picture:</Label>
-          <input type="file" onChange={handleProfilePictureChange} />
-          <button onClick={handleUploadProfilePicture} disabled={uploading}>
-            {uploading ? 'Uploading...' : 'Upload'}
-          </button>
-        </DetailItem>
-      </ProfileDetails>
-      <Button onClick={handleLogout}>Logout</Button>
-      <Button onClick={handleResetPassword}>Reset Password</Button>
+      <ProfileCard>
+        <ProfileImageWrapper>
+          <ProfileImage 
+            src={userData.profilePicture || placeholderImage} 
+            alt="Profile" 
+          />
+        </ProfileImageWrapper>
+        <ProfileInfo>
+          <Username>{userData.username}</Username>
+          <Email>{userData.email}</Email>
+          <Actions>
+            <ActionButton onClick={handleLogout}>Logout</ActionButton>
+            <ActionButton onClick={handleResetPassword}>Reset Password</ActionButton>
+          </Actions>
+        </ProfileInfo>
+      </ProfileCard>
+      <UploadSection>
+        <input type="file" onChange={handleProfilePictureChange} />
+        <ActionButton onClick={handleUploadProfilePicture} disabled={uploading}>
+          {uploading ? 'Uploading...' : 'Upload Picture'}
+        </ActionButton>
+      </UploadSection>
     </ProfileContainer>
   );
 };
 
 export default Profile;
 
+// Styled components
 const ProfileContainer = styled.div`
-  padding: 2rem;
-  background-color: #12172b;
-  color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-`;
-
-const Title = styled.h1`
-  margin-bottom: 1rem;
-`;
-
-const ProfileDetails = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 `;
 
-const DetailItem = styled.div`
+const ProfileCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+`;
+
+const ProfileImageWrapper = styled.div`
+  width: 150px;
+  height: 150px;
   margin-bottom: 1rem;
-`;
-
-const Label = styled.span`
-  font-weight: bold;
-`;
-
-const Value = styled.span`
-  margin-left: 0.5rem;
 `;
 
 const ProfileImage = styled.img`
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
-  margin-left: 0.5rem;
 `;
 
-const Button = styled.button`
+const ProfileInfo = styled.div`
   margin-top: 1rem;
+`;
+
+const Username = styled.h2`
+  font-size: 1.5rem;
+  color: #333333;
+  margin-bottom: 0.5rem;
+`;
+
+const Email = styled.p`
+  font-size: 1rem;
+  color: #777777;
+  margin-bottom: 1rem;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+const ActionButton = styled.button`
   padding: 0.5rem 1rem;
-  background-color: #007bff;
+  font-size: 1rem;
   color: #ffffff;
+  background-color: #007bff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s;
 
   &:hover {
     background-color: #0056b3;
   }
+`;
+
+const UploadSection = styled.div`
+  margin-top: 2rem;
 `;
