@@ -12,13 +12,21 @@ const Wallet = () => {
   const [accountNumber, setAccountNumber] = useState('');
   const [error, setError] = useState('');
 
+  const encryptionKey = 'encryptionKey'; // Ensure this key is consistent
+
   const encrypt = (text) => {
-    return CryptoJS.AES.encrypt(text, 'encryptionKey').toString();
+    return CryptoJS.AES.encrypt(text, encryptionKey).toString();
   };
 
   const decrypt = (ciphertext) => {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, 'encryptionKey');
-    return bytes.toString(CryptoJS.enc.Utf8);
+    try {
+      const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error('Error decrypting data:', error);
+      setError('Failed to decrypt data');
+      return null;
+    }
   };
 
   useEffect(() => {
@@ -121,7 +129,13 @@ const Wallet = () => {
     }
 
     try {
-      const recipientDoc = await getDoc(doc(db, 'users', decrypt(recipientAccount)));
+      const recipientId = decrypt(recipientAccount);
+      if (!recipientId) {
+        setError('Invalid recipient account');
+        return;
+      }
+      const recipientDocRef = doc(db, 'users', recipientId);
+      const recipientDoc = await getDoc(recipientDocRef);
       if (!recipientDoc.exists()) {
         setError('Recipient account not found');
         return;
@@ -132,18 +146,18 @@ const Wallet = () => {
       const newBalance = balance - parseFloat(amount);
 
       await updateDoc(doc(db, 'users', auth.currentUser.uid), { balance: newBalance });
-      await updateDoc(doc(db, 'users', decrypt(recipientAccount)), { balance: newRecipientBalance });
+      await updateDoc(recipientDocRef, { balance: newRecipientBalance });
 
       await addDoc(collection(db, 'transactions'), {
         userId: auth.currentUser.uid,
-        recipientId: decrypt(recipientAccount),
+        recipientId: recipientId,
         type: 'transfer',
         amount: parseFloat(amount),
         date: new Date().toISOString()
       });
 
       setBalance(newBalance);
-      setTransactions([...transactions, { type: 'transfer', amount: parseFloat(amount), date: new Date().toISOString(), recipientId: decrypt(recipientAccount) }]);
+      setTransactions([...transactions, { type: 'transfer', amount: parseFloat(amount), date: new Date().toISOString(), recipientId: recipientId }]);
       setAmount('');
       setRecipientAccount('');
       setError('');
