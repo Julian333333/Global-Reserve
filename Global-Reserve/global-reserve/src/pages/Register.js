@@ -33,8 +33,9 @@ const Register = () => {
                 uid: user.uid,
                 username: username,
                 balance: 0,
-                accountNumber: encryptedAccountNumber
-                // Add any other user information you want to store
+                accountNumber: encryptedAccountNumber,
+                plainAccountNumber: user.uid,
+                accountNumber: CryptoJS.AES.encrypt(user.uid, 'encryptionKey').toString()
             });
             navigate('/'); // Redirect to dashboard or any other page after registration
         } catch (error) {

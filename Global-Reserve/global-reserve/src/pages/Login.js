@@ -25,19 +25,20 @@ const Login = () => {
                     throw new Error('No user found with this username');
                 }
             }
-            await signInWithEmailAndPassword(auth, email, password);
-            if (auth.currentUser) {
-                const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            if (user) {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     console.log('User data:', userDoc.data());
+                    navigate('/'); // Redirect to dashboard after successful login
                 } else {
-                    console.log('No such document!');
+                    setError('User data not found');
                 }
-                navigate('/'); // Redirect to dashboard or any other page after login
-            } else {
-                setError('User not authenticated');
             }
         } catch (error) {
+            console.error('Login error:', error);
             setError(error.message);
         }
     };
