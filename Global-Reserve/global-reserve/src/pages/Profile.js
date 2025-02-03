@@ -1,17 +1,14 @@
-// src/pages/Profile.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, db, storage } from '../firebaseConfig';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { signOut, sendPasswordResetEmail } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from '../firebaseConfig'; // No need for Firebase storage anymore
+import { doc, getDoc } from 'firebase/firestore';
+import { signOut, sendPasswordResetEmail } from 'firebase/auth'; 
 import styled from 'styled-components';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -26,6 +23,11 @@ const Profile = () => {
     };
 
     fetchUserData();
+
+    const storedProfilePicture = localStorage.getItem('profilePicture');
+    if (storedProfilePicture) {
+      setProfilePicture(storedProfilePicture);
+    }
   }, []);
 
   const handleLogout = async () => {
@@ -42,21 +44,16 @@ const Profile = () => {
 
   const handleProfilePictureChange = (e) => {
     if (e.target.files[0]) {
-      setProfilePicture(e.target.files[0]);
-    }
-  };
+      const file = e.target.files[0];
+      const reader = new FileReader();
 
-  const handleUploadProfilePicture = async () => {
-    if (profilePicture && auth.currentUser) {
-      setUploading(true);
-      const storageRef = ref(storage, `profilePictures/${auth.currentUser.uid}`);
-      await uploadBytes(storageRef, profilePicture);
-      const downloadURL = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        profilePicture: downloadURL,
-      });
-      setUserData((prevData) => ({ ...prevData, profilePicture: downloadURL }));
-      setUploading(false);
+      reader.onloadend = () => {
+        const base64Image = reader.result;
+        setProfilePicture(base64Image);
+        localStorage.setItem('profilePicture', base64Image);
+      };
+
+      reader.readAsDataURL(file);
     }
   };
 
@@ -66,84 +63,126 @@ const Profile = () => {
 
   return (
     <ProfileContainer>
-      <Title>Profil</Title>
-      <ProfileDetails>
-        <DetailItem>
-          <Label>Username:</Label>
-          <Value>{userData.username}</Value>
-        </DetailItem>
-        <DetailItem>
-          <Label>Email:</Label>
-          <Value>{userData.email}</Value>
-        </DetailItem>
-        {userData.profilePicture && (
-          <DetailItem>
-            <Label>Profile Picture:</Label>
-            <ProfileImage src={userData.profilePicture} alt="Profile" />
-          </DetailItem>
-        )}
-        <DetailItem>
-          <Label>Upload Profile Picture:</Label>
-          <input type="file" onChange={handleProfilePictureChange} />
-          <button onClick={handleUploadProfilePicture} disabled={uploading}>
-            {uploading ? 'Uploading...' : 'Upload'}
-          </button>
-        </DetailItem>
-      </ProfileDetails>
-      <Button onClick={handleLogout}>Logout</Button>
-      <Button onClick={handleResetPassword}>Reset Password</Button>
+      <ProfileCard>
+        <ProfileImageWrapper>
+          {profilePicture ? (
+            <ProfileImage 
+              src={profilePicture} 
+              alt="Profile" 
+            />
+          ) : (
+            <NoProfilePicture>No profile picture available</NoProfilePicture>
+          )}
+        </ProfileImageWrapper>
+        <ProfileInfo>
+          <Username>{userData.username}</Username>
+          <Email>{userData.email}</Email>
+          <Actions>
+            <ActionButton onClick={handleLogout}>Logout</ActionButton>
+            <ActionButton onClick={handleResetPassword}>Reset Password</ActionButton>
+          </Actions>
+        </ProfileInfo>
+      </ProfileCard>
+      <UploadSection>
+        <input type="file" onChange={handleProfilePictureChange} />
+        <ActionButton>Upload Picture</ActionButton>
+      </UploadSection>
     </ProfileContainer>
   );
 };
 
 export default Profile;
 
+// Styled components
 const ProfileContainer = styled.div`
-  padding: 2rem;
-  background-color: #12172b;
-  color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-`;
-
-const Title = styled.h1`
-  margin-bottom: 1rem;
-`;
-
-const ProfileDetails = styled.div`
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #0d1117; /* Dark background */
+  color: #f0f6fc; /* Light text */
+  min-height: 100vh;
+  overflow: hidden; 
 `;
 
-const DetailItem = styled.div`
+const ProfileCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #161b22; /* Darker card background */
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  color: #f0f6fc;
+`;
+
+const ProfileImageWrapper = styled.div`
+  width: 150px;
+  height: 150px;
   margin-bottom: 1rem;
-`;
-
-const Label = styled.span`
-  font-weight: bold;
-`;
-
-const Value = styled.span`
-  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const ProfileImage = styled.img`
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
-  margin-left: 0.5rem;
 `;
 
-const Button = styled.button`
+const NoProfilePicture = styled.div`
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: #444c56; /* Neutral background for missing image */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f0f6fc;
+  font-size: 0.9rem;
+  font-weight: bold;
+`;
+
+const ProfileInfo = styled.div`
   margin-top: 1rem;
+`;
+
+const Username = styled.h2`
+  font-size: 1.5rem;
+  color: #f0f6fc;
+  margin-bottom: 0.5rem;
+`;
+
+const Email = styled.p`
+  font-size: 1rem;
+  color: #8b949e;
+  margin-bottom: 1rem;
+`;
+
+const Actions = styled.div`
+  display: flex;
+  gap: 1rem;
+`;
+
+const ActionButton = styled.button`
   padding: 0.5rem 1rem;
-  background-color: #007bff;
+  font-size: 1rem;
   color: #ffffff;
+  background-color: #238636; /* Green button */
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #2ea043; /* Darker green on hover */
   }
+`;
+
+const UploadSection = styled.div`
+  margin-top: 2rem;
 `;
