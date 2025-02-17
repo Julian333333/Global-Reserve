@@ -25,17 +25,15 @@ const Login = () => {
                     throw new Error('No user found with this username');
                 }
             }
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            
-            if (user) {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    console.log('User data:', userDoc.data());
-                    navigate('/'); // Redirect to dashboard after successful login
-                } else {
-                    setError('User data not found');
-                }
+            await signInWithEmailAndPassword(auth, email, password);
+            // Now safe to call Firestore:
+            const docRef = doc(db, "users", auth.currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                console.log('User data:', docSnap.data());
+                navigate('/'); // Redirect to dashboard after successful login
+            } else {
+                setError('User data not found');
             }
         } catch (error) {
             console.error('Login error:', error);

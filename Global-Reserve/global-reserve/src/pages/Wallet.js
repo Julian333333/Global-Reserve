@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { 
   doc, 
@@ -9,9 +9,10 @@ import {
   where, 
   getDocs, 
   updateDoc,
-  runTransaction,
   onSnapshot,
-  writeBatch 
+  writeBatch,
+  orderBy,
+  limit 
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import styled from 'styled-components';
@@ -28,7 +29,7 @@ const Wallet = () => {
 
   const encryptionKey = process.env.REACT_APP_ENCRYPTION_KEY || 'encryptionKey';
 
-  const decrypt = (ciphertext) => {
+  const decrypt = useCallback((ciphertext) => {
     try {
       if (!ciphertext || typeof ciphertext !== 'string') {
         return null;
@@ -43,66 +44,59 @@ const Wallet = () => {
       console.error('Decryption error:', error);
       return null;
     }
-  };
+  }, [encryptionKey]);
 
   useEffect(() => {
-    let unsubscribeAuth;
-    let unsubscribeTransactions;
-    let unsubscribeBalance;
-
-    const setupWallet = async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        setError('Please sign in to access your wallet');
+        console.log("User not authenticated; clearing data.");
+        setTransactions([]);
+        setBalance(0);
+        setAccountNumber('');
         setIsLoading(false);
         return;
       }
 
-      try {
-        // Listen for changes on current user
-        const userRef = doc(db, 'users', user.uid);
-        unsubscribeBalance = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            setBalance(userData.balance || 0);
-            // Only decrypt if there's a valid encrypted field
-            if (userData.accountNumber) {
-              setAccountNumber(decrypt(userData.accountNumber));
-            } else {
-              // fallback to plainAccountNumber
-              setAccountNumber(userData.plainAccountNumber || '');
-            }
+      // Listen for user document changes (balance, accountNumber)
+      const userRef = doc(db, 'users', user.uid);
+      const unsubscribeBalance = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setBalance(userData.balance || 0);
+          if (userData.accountNumber) {
+            setAccountNumber(decrypt(userData.accountNumber));
+          } else {
+            setAccountNumber(userData.plainAccountNumber || '');
           }
-        });
-
-        // Listen for transactions
-        const q = query(
-          collection(db, 'transactions'),
-          where('userId', '==', user.uid)
-        );
-        unsubscribeTransactions = onSnapshot(q, (snapshot) => {
-          const txList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setTransactions(txList);
-        });
-
+        }
         setIsLoading(false);
-      } catch (error) {
-        console.error('Error setting up wallet:', error);
-        setError('Failed to load wallet data');
-        setIsLoading(false);
-      }
-    };
+      });
 
-    unsubscribeAuth = onAuthStateChanged(auth, setupWallet);
+      // Listen for the last five transactions in real time
+      const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', user.uid),
+        orderBy('date', 'desc'),
+        limit(5)
+      );
+      const unsubscribeTransactions = onSnapshot(q, (snapshot) => {
+        const txList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTransactions(txList);
+      });
 
-    return () => {
-      if (unsubscribeAuth) unsubscribeAuth();
-      if (unsubscribeTransactions) unsubscribeTransactions();
-      if (unsubscribeBalance) unsubscribeBalance();
-    };
-  }, []);
+      // Cleanup watchers when user logs out or component unmounts
+      return () => {
+        unsubscribeBalance();
+        unsubscribeTransactions();
+      };
+    });
+
+    // Cleanup for onAuthStateChanged
+    return () => unsubscribeAuth();
+  }, [decrypt]);
 
   const handleTransaction = async (type) => {
     if (!auth.currentUser) {
@@ -114,21 +108,50 @@ const Wallet = () => {
     setError('');
 
     try {
-      if (type === 'transfer') {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
+
+      const currentBalance = userDoc.data().balance || 0;
+      const transactionAmount = parseFloat(amount);
+
+      if (type === 'deposit') {
+        // Update balance for deposit
+        await updateDoc(userRef, {
+          balance: currentBalance + transactionAmount,
+        });
+        // Create transaction document for deposit
+        await addDoc(collection(db, 'transactions'), {
+          userId: auth.currentUser.uid,
+          type: 'deposit',
+          amount: transactionAmount,
+          date: new Date().toISOString(),
+        });
+      } else if (type === 'withdraw') {
+        if (currentBalance < transactionAmount) {
+          throw new Error('Insufficient balance');
+        }
+        // Update balance for withdraw
+        await updateDoc(userRef, {
+          balance: currentBalance - transactionAmount,
+        });
+        // Create transaction document for withdraw
+        await addDoc(collection(db, 'transactions'), {
+          userId: auth.currentUser.uid,
+          type: 'withdraw',
+          amount: transactionAmount,
+          date: new Date().toISOString(),
+        });
+      } else if (type === 'transfer') {
         if (!recipientAccount) {
           throw new Error('Please enter recipient account number');
         }
 
         // Create batch
         const batch = writeBatch(db);
-
-        // Get sender's document
-        const userRef = doc(db, 'users', auth.currentUser.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (!userDoc.exists()) {
-          throw new Error('User not found');
-        }
 
         // Get recipient's document
         const q = query(collection(db, 'users'), where('plainAccountNumber', '==', recipientAccount));
@@ -137,12 +160,9 @@ const Wallet = () => {
           throw new Error('Recipient not found');
         }
         const recipientDoc = snapshot.docs[0];
-
-        const currentBalance = userDoc.data().balance || 0;
         const recipientBalance = recipientDoc.data().balance || 0;
-        const transferAmount = parseFloat(amount);
 
-        if (currentBalance < transferAmount) {
+        if (currentBalance < transactionAmount) {
           throw new Error('Insufficient balance');
         }
 
@@ -152,27 +172,27 @@ const Wallet = () => {
           userId: auth.currentUser.uid,
           recipientId: recipientAccount,
           type: 'transfer',
-          amount: transferAmount,
+          amount: transactionAmount,
           date: new Date().toISOString(),
           transactionId: transactionRef.id
         });
 
         // Update balances
         batch.update(userRef, {
-          balance: currentBalance - transferAmount,
+          balance: currentBalance - transactionAmount,
           transactionId: transactionRef.id
         });
 
         batch.update(recipientDoc.ref, {
-          balance: recipientBalance + transferAmount,
+          balance: recipientBalance + transactionAmount,
           transactionId: transactionRef.id
         });
 
         await batch.commit();
-        
-        setAmount('');
-        setRecipientAccount('');
       }
+
+      setAmount('');
+      setRecipientAccount('');
     } catch (error) {
       console.error(`Error performing ${type}:`, error);
       setError(error.message);
@@ -180,6 +200,11 @@ const Wallet = () => {
       setIsLoading(false);
     }
   };
+
+  if (!db) {
+    console.error('Firestore is not initialized. Check your firebaseConfig.js file.');
+    return <div>Loading...</div>;
+  }
 
   return (
     <WalletContainer>
