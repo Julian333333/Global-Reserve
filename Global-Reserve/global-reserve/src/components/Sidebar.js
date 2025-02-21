@@ -34,7 +34,6 @@ const Sidebar = () => {
         <MenuItem onClick={handleWalletRedirect}>💳 Wallet</MenuItem> {/* Add Wallet menu item */}
         <MenuItem onClick={handleProfileRedirect}>👤 Profile</MenuItem> {/* Verknüpfe den Button mit der Profilseite */}
         <Divider />
-        <MenuItem>⚙️ Settings</MenuItem>
         <MenuItem onClick={handleLoginRedirect}>🔐 Log In</MenuItem>
       </Menu>
     </Container>
