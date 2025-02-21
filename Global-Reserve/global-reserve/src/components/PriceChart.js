@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import 'chart.js/auto'; // Notwendig, um Chart.js zu initialisieren
+import 'chart.js/auto';
 import styled from 'styled-components';
+import { db } from '../firebaseConfig';
+import { collection, addDoc, query, orderBy, getDocs } from 'firebase/firestore';
 
-// Box-Container für den Chart
 const ChartBox = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
@@ -17,80 +18,96 @@ const Dropdown = styled.select`
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ccc;
-  background: #0b0f22; // Dunklerer Hintergrund
-  color: #fff; // Helle Schriftfarbe
+  background: #0b0f22;
+  color: #fff;
   font-size: 1rem;
   outline: none;
   &:focus {
     border-color: #ffd700;
   }
   option {
-    background: #0b0f22; // Dunklerer Hintergrund für Optionen
-    color: #fff; // Helle Schriftfarbe für Optionen
+    background: #0b0f22;
+    color: #fff;
   }
 `;
 
 const PriceChart = () => {
   const [symbol, setSymbol] = useState('gold');
-  const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = () => {
-    fetch(`https://api.api-ninjas.com/v1/commodityprice?name=${symbol}`, {
-      method: 'GET',
-      headers: { 'X-Api-Key': '5DUagI8vNs0xpDJKRIgIPA==41Xe7h6HvLXWr7mx' },
-      contentType: 'application/json'
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            `API-Request fehlgeschlagen mit Status ${response.status} ${response.statusText}`
-          );
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log('API-Daten:', data); // Debugging-Informationen
-
-        // Überprüfen Sie, ob data ein Objekt ist und ob es das erwartete Format hat
-        if (!data || typeof data !== 'object' || !data.price || !data.updated) {
-          throw new Error('Ungültige Daten von der API erhalten');
-        }
-
-        // Erstellen Sie Labels und Preise basierend auf den erhaltenen Daten
-        const labels = [new Date(data.updated * 1000).toLocaleTimeString()];
-        const prices = [data.price];
-
-        setChartData((prevData) => ({
-          labels: [...(prevData.labels || []), ...labels],
-          datasets: [
-            {
-              label: `${symbol.toUpperCase()} Preis`,
-              data: [...(prevData.datasets ? prevData.datasets[0].data : []), ...prices],
-              fill: false,
-              borderColor: '#ffd700',
-              tension: 0.1,
-            },
-          ],
-        }));
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Fehler beim Abrufen der Chartdaten:', error);
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`https://api.api-ninjas.com/v1/commodityprice?name=${symbol}`, {
+        method: 'GET',
+        headers: { 'X-Api-Key': '5DUagI8vNs0xpDJKRIgIPA==41Xe7h6HvLXWr7mx' },
+        contentType: 'application/json'
       });
+      
+      if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+      
+      const data = await response.json();
+      if (!data || typeof data !== 'object' || !data.price || !data.updated) {
+        throw new Error('Invalid API data');
+      }
+
+      const timestamp = new Date(data.updated * 1000);
+      
+      // Save to Firebase
+      await addDoc(collection(db, symbol), {
+        price: data.price,
+        timestamp: timestamp,
+      });
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const loadChartData = async () => {
+    try {
+      const q = query(collection(db, symbol), orderBy('timestamp', 'asc'));
+      const querySnapshot = await getDocs(q);
+      
+      const labels = [];
+      const prices = [];
+      
+      querySnapshot.forEach((doc) => {
+        const entry = doc.data();
+        const timeString = new Date(entry.timestamp.seconds * 1000).toLocaleString();
+        labels.push(timeString);
+        prices.push(entry.price);
+      });
+
+      setChartData({
+        labels,
+        datasets: [{
+          label: `${symbol.toUpperCase()} Price`,
+          data: prices,
+          fill: false,
+          borderColor: symbol === 'gold' ? '#ffd700' : symbol === 'lumber' ? '#8B4513' : symbol === 'platinum' ? '#E5E4E2' : '#B5A642',
+          tension: 0.1,
+        }],
+      });
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+    }
   };
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000); // 10000 Millisekunden = 10 Sekunden
-    return () => clearInterval(interval); // Aufräumen des Intervalls bei Komponentendemontage
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
+  }, [symbol]);
+
+  useEffect(() => {
+    loadChartData();
   }, [symbol]);
 
   const handleSymbolChange = (event) => {
     setSymbol(event.target.value);
-    setChartData({}); // Clear the chart data when the symbol changes
-    setLoading(true); // Set loading to true when the symbol changes
+    setChartData(null);
+    setLoading(true);
   };
 
   return (
@@ -99,13 +116,8 @@ const PriceChart = () => {
         <option value="gold">Gold</option>
         <option value="lumber">Lumber</option>
         <option value="platinum">Platinum</option>
-        <option value="palladium">Palladium</option>
       </Dropdown>
-      {loading ? (
-        <p>Lade Chart...</p>
-      ) : (
-        <Line data={chartData} />
-      )}
+      {loading || !chartData ? <p>Loading Chart...</p> : <Line data={chartData} />}
     </ChartBox>
   );
 };
