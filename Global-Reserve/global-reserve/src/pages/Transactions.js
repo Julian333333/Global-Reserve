@@ -4,7 +4,7 @@ import { query, collection, where, onSnapshot, orderBy, getDoc, doc } from 'fire
 import styled from 'styled-components';
 import CryptoJS from 'crypto-js';
 
-function TransactionsPage() {
+const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [filterType, setFilterType] = useState(''); // e.g., 'deposit', 'withdraw', 'transfer'
   const [sortDirection, setSortDirection] = useState('desc');
@@ -108,31 +108,33 @@ function TransactionsPage() {
           Sort by {sortField.toUpperCase()} ({sortDirection.toUpperCase()})
         </SortButton>
       </FilterSection>
-      <TransactionsTable>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Recipient</th>
-            <th>Sender Account</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((tx) => (
-            <tr key={tx.id}>
-              <td>{tx.type}</td>
-              <td>{tx.amount}</td>
-              <td>{new Date(tx.date).toLocaleString()}</td>
-              <td>{tx.recipientId || '-'}</td>
-              <td>{tx.senderAccountNumber || '-'}</td>
+      <TableContainer>
+        <TransactionsTable>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Recipient</th>
+              <th>Sender Account</th>
             </tr>
-          ))}
-        </tbody>
-      </TransactionsTable>
+          </thead>
+          <tbody>
+            {transactions.map((tx) => (
+              <tr key={tx.id}>
+                <td>{tx.type}</td>
+                <td>{tx.amount}</td>
+                <td>{new Date(tx.date).toLocaleString()}</td>
+                <td>{tx.recipientId || '-'}</td>
+                <td>{tx.senderAccountNumber || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </TransactionsTable>
+      </TableContainer>
     </TransactionsContainer>
   );
-}
+};
 
 export default TransactionsPage;
 
@@ -140,7 +142,7 @@ const TransactionsContainer = styled.div`
   padding: 1rem;
   color: #ffffff;
   background-color: #1c2c4c;
-  min-height: 100vh;
+  min-height: 10vh;
 `;
 
 const FilterSection = styled.div`
@@ -151,6 +153,12 @@ const SortButton = styled.button`
   margin-left: 1rem;
 `;
 
+const TableContainer = styled.div`
+  max-height: 78vh; /* Adjust the height as needed */
+  overflow-y: auto;
+  position: relative;
+`;
+
 const TransactionsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -158,9 +166,12 @@ const TransactionsTable = styled.table`
     border: 1px solid #ffffff;
     padding: 0.5rem;
     text-align: left;
-    border-radius: 9 px;
+    border radius: 0.25rem;
   }
   th {
     background-color: #2a2e47;
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 `;
